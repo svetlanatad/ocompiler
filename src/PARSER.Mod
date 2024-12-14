@@ -17,8 +17,21 @@ VAR
     idName: scanner.Identifier;
     f: Files.File;
     prgName: scanner.Identifier;
+    errc: INTEGER;
 
+PROCEDURE error(msg: ARRAY OF CHAR);
+BEGIN
+  Out.String(msg); Out.Ln;
+  INC(errc);
+  Out.String("current error count: "); Out.Int(errc, 0); Out.Ln;
+END error;
 
+PROCEDURE checkError(err: INTEGER);
+BEGIN
+  IF err > 0 THEN 
+    Out.String("you have an error: halting. "); Out.Ln; HALT(0);
+  END;
+END checkError;
 
 PROCEDURE addToSymTable(idName: scanner.Identifier);
 VAR i: INTEGER;
@@ -31,9 +44,16 @@ BEGIN
         END;
     END;
 *)
+    i := 0;
+    REPEAT
+      IF symtable[i].Identifier = idName THEN 
+        error("variable already exists in sym table"); Out.Ln; RETURN; END;
+      INC(i);
+    UNTIL (symtable[i].Identifier = 0X);
     symtable[symtableLen].Identifier := idName;
     INC(symtableLen);
     Out.String("Variable "); Out.String(idName); Out.String(" added to symbol table."); Out.Ln;
+    symtable[symtableLen].Digit := 0;
     Out.String("symbol after adding the previous ident to sym tabel"); Out.Int(sym, 0); Out.Ln;
 END addToSymTable;
 
@@ -47,7 +67,7 @@ BEGIN
     ELSIF sym = scanner.integerdecl THEN 
         Out.String("Got an integer declaration"); Out.Ln;
     ELSE 
-        Out.String("Operand can be either string or integer; this is neither."); Out.Ln; 
+        (*Out.String("Operand can be either string or integer; this is neither."); Out.Ln; *) error("Operand can be either string or integer; this is neither. "); 
     END;
 END type;
 
@@ -289,7 +309,17 @@ BEGIN
 END prg;
 
 
-
+PROCEDURE printsyms;
+VAR 
+  i: INTEGER;
+BEGIN 
+  i := 0;
+  REPEAT
+   Out.String("identifier: "); Out.String(symtable[i].Identifier); Out.Ln;
+   Out.String("digit: "); Out.Int(symtable[i].Digit, 0); Out.Ln;
+   INC(i);
+  UNTIL i = symtableLen;
+END printsyms;
 
 PROCEDURE ParseProgram;
 BEGIN
@@ -300,5 +330,8 @@ BEGIN
 END ParseProgram;
 
 BEGIN
+    errc := 0;
     ParseProgram;
+    Out.String("############################################################"); Out.Ln;
+    printsyms;
 END PARSER.
