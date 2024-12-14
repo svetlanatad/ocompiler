@@ -11,7 +11,7 @@ TYPE
 VAR 
     sym: INTEGER;
     symtable: ARRAY 64 OF symbol;
-    symtableLen: INTEGER; (* Track number of symbols in table *)
+    symtableLen: INTEGER;
     ch: CHAR;
     r: Files.Rider;
     idName: scanner.Identifier;
@@ -57,7 +57,7 @@ END type;
 PROCEDURE operand;
 BEGIN
 
-IF (sym = scanner.numb) THEN RETURN; ELSIF (sym = scanner.ident) THEN (*idName := scanner.id;*) RETURN; END;
+IF (sym = scanner.numb) THEN RETURN; ELSIF (sym = scanner.ident) THEN RETURN; END;
 
 scanner.GetSym; sym := scanner.sym;
     Out.String("Checking operand, current sym: "); Out.Int(sym, 0); Out.Ln;
@@ -65,7 +65,6 @@ scanner.GetSym; sym := scanner.sym;
         Out.String("Got a number type"); Out.Ln;
     ELSIF sym = scanner.ident THEN
         Out.String("Got an identifier type"); Out.Ln;
-	(*idName := scanner.id;*)
     ELSE
         Out.String("Operand can be either number or identifier; this is neither."); Out.Ln;
     END;
@@ -80,7 +79,6 @@ PROCEDURE varSeq;
 
 BEGIN
     Out.String("Entering varSeq, current sym: "); Out.Int(sym, 0); Out.Ln;
-   (* Out.String("After GetSym in varSeq, sym: "); Out.Int(sym, 0); Out.Ln;*)
 
     IF sym # scanner.ident THEN 
         Out.String("Expected identifier. But i dont know maybe i checked already before. "); Out.Ln;
@@ -95,7 +93,6 @@ BEGIN
             scanner.GetSym; sym := scanner.sym; 
            Out.String("calling getsym for recursion so the current sym is: "); Out.Int(sym, 0); Out.Ln;
             varSeq;
-           (*i am guessing it should be working correctly now but i am not sure *)
         ELSE 
             IF sym = scanner.de THEN
                 Out.String("Colon found, expecting type declaration."); Out.Ln;
@@ -119,9 +116,6 @@ BEGIN
 END;
 END; 
 END varSeq; 
-
-
-
 
 
 
@@ -221,7 +215,6 @@ BEGIN
 
         IF sym = scanner.as THEN
             Out.String("Assignment ':=' found."); Out.Ln;
-            (*scanner.GetSym; sym := scanner.sym;*)
 
             operand;
 
@@ -230,17 +223,15 @@ BEGIN
                 (* Simple assignment *)
                 Out.String("Simple Assignment: Adding to sym table the following ident: "); Out.String(idName); Out.Ln;
                 addToSymTable(idName);
-              (*  scanner.GetSym; sym := scanner.sym;   Move past the semicolon *)
             ELSE
 		    mathOp(idName);
                     Out.String("Math operator found."); Out.Ln;
-                (*    scanner.GetSym; sym := scanner.sym;   Move to the next operand *)
                     operand;
 		    Out.String("operand found?"); Out.Ln; scanner.GetSym; sym := scanner.sym;
                     IF sym = scanner.ks THEN
+                        (*Complex assignment*)
                         Out.String("ComplexAssignment: Adding to sym table the following ident: "); Out.String(idName); Out.Ln;
                         addToSymTable(idName);
-                       (* scanner.GetSym; sym := scanner.sym;   Move past the semicolon *)
                      ELSE
                         Out.String("Expected ';' after operand."); Out.Ln;
                     END;
@@ -303,7 +294,7 @@ END prg;
 PROCEDURE ParseProgram;
 BEGIN
     symtableLen := 0;
-    scanner.WorkPlease;
+    scanner.saveFile;
     prg;
     Out.String("Parsing completed."); Out.Ln;
 END ParseProgram;

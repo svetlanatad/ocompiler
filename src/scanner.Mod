@@ -156,8 +156,8 @@ VAR f: Files.File;
 BEGIN
     f := Files.Old("input0.txt");
     IF f # NIL THEN
-        Files.Set(rider, f, 0); (* Set the rider to the beginning of the file *)
-        GetCh; (* Initialize reading *)
+        Files.Set(rider, f, 0);
+        GetCh;
         Scan;
     ELSE
         Out.String("File not found!"); Out.Ln;
@@ -165,7 +165,7 @@ BEGIN
 END Main;
 
 
-PROCEDURE WorkPlease*;
+PROCEDURE saveFile*;
 
 VAR f: Files.File;
 BEGIN
@@ -177,7 +177,6 @@ ELSE
 	Out.String("File not found");
 END;
 
-END WorkPlease;
-(*BEGIN
-    Main;*)
+END saveFile;
+
 END scanner.
