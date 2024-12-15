@@ -1,6 +1,6 @@
 MODULE PARSER;
 
-IMPORT Out, scanner, Files;
+IMPORT Out, scanner, Files, Strings;
 
 TYPE
     symbol = RECORD
@@ -33,27 +33,46 @@ BEGIN
   END;
 END checkError;
 
+PROCEDURE checkprgname(str: ARRAY OF CHAR): BOOLEAN;
+(*corrupted: dont use, i may think later*)
+VAR 
+  b: BOOLEAN;
+  i: INTEGER;
+BEGIN 
+  b := TRUE;
+  IF (LEN(str) # LEN(prgName)) THEN b := FALSE; RETURN b END;
+  Out.String("they may be the same now as the lengths of the strings are the same"); 
+  i := 0;
+  REPEAT
+    IF str[i] # prgName[i] THEN Out.Char(str[i]); Out.String("is different from "); Out.Char(prgName[i]); Out.Ln; b := FALSE; END;
+    Out.Char(str[i]); Out.Ln; Out.Char(prgName[i]); Out.Ln; 
+    INC(i);
+  UNTIL (prgName[i] = 0X) & (str[i] = 0X);
+RETURN b;
+END checkprgname;
+
 PROCEDURE addToSymTable(idName: scanner.Identifier);
-VAR i: INTEGER;
+VAR 
+  i: INTEGER;
+  b: BOOLEAN;
 BEGIN
     Out.String("Adding to symbol table: "); Out.String(idName); Out.Ln;
-   (* FOR i := 0 TO symtableLen-1 DO
-        IF symtable[i].Identifier = idName THEN
-            Out.String("Variable "); Out.String(idName); Out.String(" already defined. Defining again?."); Out.Ln;
-            RETURN;
-        END;
-    END;
-*)
     i := 0;
     REPEAT
       IF symtable[i].Identifier = idName THEN 
         error("variable already exists in sym table"); Out.Ln; RETURN; END;
+      Out.String("trying to check if the var name = prg name");
+       b := Strings.Match(symtable[i].Identifier, prgName);
+        IF b THEN 
+        error("variable cannot have the same name as the program"); Out.Ln; RETURN; 
+        END;
+      
       INC(i);
     UNTIL (symtable[i].Identifier = 0X);
     symtable[symtableLen].Identifier := idName;
     INC(symtableLen);
     Out.String("Variable "); Out.String(idName); Out.String(" added to symbol table."); Out.Ln;
-    symtable[symtableLen].Digit := 0;
+    (*symtable[symtableLen].Digit := sym;*)
     Out.String("symbol after adding the previous ident to sym tabel"); Out.Int(sym, 0); Out.Ln;
 END addToSymTable;
 
@@ -107,7 +126,9 @@ BEGIN
         
         idName := scanner.id;
         Out.String("Identifier found in varSeq: "); Out.String(idName); Out.Ln;
-	IF (idName = prgName) THEN Out.String("Error: You cannot put program name for a variable."); Out.Ln; END;
+        Out.String("adding it to sym table" ); addToSymTable(idName); Out.Ln;
+
+	(*IF (idName = prgName) THEN Out.String("Error: You cannot put program name for a variable."); Out.Ln; END;*)
         IF sym = scanner.comm THEN 
             Out.String("Comma found, calling varSeq recursively."); Out.Ln;
             scanner.GetSym; sym := scanner.sym; 
@@ -274,6 +295,7 @@ BEGIN
             IF sym = scanner.ks THEN
                 Out.String("Semicolon found after statement."); Out.Ln;
                scanner.GetSym; sym := scanner.sym; 
+               symtable[symtableLen].Digit := sym;
             ELSE
                 Out.String("Expected ';' after statement."); Out.Ln;
                 RETURN;
@@ -334,4 +356,6 @@ BEGIN
     ParseProgram;
     Out.String("############################################################"); Out.Ln;
     printsyms;
+    Out.String("err count: "); Out.Int(errc, 0); Out.Ln;
+    Out.String("prg name: "); Out.String(prgName); Out.Ln;
 END PARSER.
